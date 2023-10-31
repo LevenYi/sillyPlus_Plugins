@@ -1,6 +1,0 @@
-{
-  "type": "module",
-  "dependencies": {
-    "bard-ai": "^2.0.3"
-  }
-}

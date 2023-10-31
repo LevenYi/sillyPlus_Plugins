@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@waylaidwanderer/chatgpt-api": "^1.37.2",
-    "bimg": "^0.1.5"
-  }
-}
