@@ -49,17 +49,17 @@ Form({
   columns: [
     {
       title: "地址",
-      key: "notify.gocqhttp_url",
+      key: "notify.gocq_url",
       tooltip: "示例：https://push.example.de:8080"
     },
     {
       title: "token",
-      key: "notify.gocqhttp_token",
+      key: "notify.gocq_token",
       tooltip: "gocqhtt配置文件设置的访问密钥"
     },
     {
       title: "QQ",
-      key: "notify.gocqhttp_qq",
+      key: "notify.gocq_id",
       tooltip: "推送到个人QQ或者QQ群号"
     }
   ]
@@ -144,32 +144,32 @@ Form({
     },
     {
       title: "推送目标账号ID",
-      key: "notify.tgbot_pushto",
+      key: "notify.tgbot_id",
       //tooltip: "自定义推送图标"
     },
     {
       title: "Telegram机器人代理设置",
       valueType: "group",
       columns: [
-        {
-          title: "代理地址",
-          key: "notify.tgbot_proxyhost",
-          tooltip: "例如:127.0.0.1"
-        },
-        {
-          title: "代理端口",
-          key: "notify.tgbot_proxyport",
-          tooltip: "例如:127.0.0.1"
-        },
-        {
-          title: "代理认证参数",
-          key: "notify.tgbot_proxyauth",
-          tooltip: "例如:127.0.0.1"
-        },
+        // {
+        //   title: "代理地址",
+        //   key: "notify.tgbot_proxyhost",
+        //   tooltip: "例如:127.0.0.1"
+        // },
+        // {
+        //   title: "代理端口",
+        //   key: "notify.tgbot_proxyport",
+        //   tooltip: "例如:127.0.0.1"
+        // },
+        // {
+        //   title: "代理认证参数",
+        //   key: "notify.tgbot_proxyauth",
+        //   tooltip: "例如:127.0.0.1"
+        // },
         {
           title: "自建反向地址",
           key: "notify.tgbot_apihost",
-          tooltip: "例如:127.0.0.1"
+          tooltip: "例如:https://domain.com/tgproxy"
         }
       ]
     }
@@ -290,14 +290,10 @@ const { sender: s, Bucket, sleep, utils: { buildCQTag, image, video }, } = requi
 
 
 
-function querystring(params) {
-  return Object.keys(params).map(key => `${key}=${encodeURIComponent(JSON.stringify(params[key]))}`).join("&");
-}
 
-
-const querystring = require('querystring');
-const $ = new Env();
 const timeout = 15000; //超时时间(单位毫秒)
+const db = new Bucket("notify")
+
 // =======================================gotify通知设置区域==============================================
 //gotify_url 填写gotify地址,如https://push.example.de:8080
 //gotify_token 填写gotify的消息应用token
@@ -335,11 +331,11 @@ let CHAT_TOKEN = '';
 //此处填你BarkAPP的信息(IP/设备码，例如：https://api.day.app/XXXXXXXX)
 let BARK_PUSH = '';
 //BARK app推送图标,自定义推送图标(需iOS15或以上)
-let BARK_ICON = 'https://qn.whyour.cn/logo.png';
+let BARK_ICON = 'https://raw.githubusercontent.com/LevenYi/bot_sources/main/icon.png';
 //BARK app推送铃声,铃声列表去APP查看复制填写
 let BARK_SOUND = '';
 //BARK app推送消息的分组, 默认为"QingLong"
-let BARK_GROUP = 'QingLong';
+let BARK_GROUP = 'sillyPlus';
 
 // =======================================telegram机器人通知设置区域===========================================
 //此处填你telegram bot 的Token，telegram机器人通知推送必填项.例如：1077xxx4424:AAFjv0FcqxxxxxxgEMGfi22B4yh15R5uw
@@ -410,132 +406,54 @@ let AIBOTK_NAME = '';
 //FSKEY 飞书机器人的 FSKEY
 let FSKEY = '';
 
-//==========================云端环境变量的判断与接收=========================
-if (process.env.GOTIFY_URL) {
-  GOTIFY_URL = process.env.GOTIFY_URL;
-}
-if (process.env.GOTIFY_TOKEN) {
-  GOTIFY_TOKEN = process.env.GOTIFY_TOKEN;
-}
-if (process.env.GOTIFY_PRIORITY) {
-  GOTIFY_PRIORITY = process.env.GOTIFY_PRIORITY;
+
+//==========================读取配置=========================
+
+async function init() {
+  await Promise.all([
+    db.get("gotify_url").then((data) => { if (data) GOTIFY_URL = data }),
+    db.get("gotify_token").then((data) => { if (data) GOTIFY_TOKEN = data }),
+
+    db.get("gocq_url").then((data) => { if (data) GOBOT_URL = data }),
+    db.get("gocq_token").then((data) => { if (data) GOBOT_TOKEN = data }),
+    db.get("gocq_id").then((data) => { if (data) GOBOT_QQ = data }),
+
+    db.get("sckey").then((data) => { if (data) SCKEY = data }),
+
+    db.get("pushdeer_url").then((data) => { if (data) PUSHDEER_KEY = data }),
+    db.get("pushdeer_key").then((data) => { if (data) PUSHDEER_URL = data }),
+
+    db.get("chat_url").then((data) => { if (data) CHAT_URL = data }),
+    db.get("chat_token").then((data) => { if (data) CHAT_TOKEN = data }),
+
+    db.get("bark_url").then((data) => { if (data) BARK_PUSH = data }),
+    db.get("bark_icon").then((data) => { if (data) BARK_SOUND = data }),
+    db.get("bark_group").then((data) => { if (data) BARK_GROUP = data }),
+
+    db.get("tgbot_token").then((data) => { if (data) TG_BOT_TOKEN = data }),
+    db.get("tgbot_id").then((data) => { if (data) TG_USER_ID = data }),
+    db.get("tgbot_proxyport").then((data) => { if (data) TG_PROXY_HOST = data }),
+    db.get("tgbot_proxyport").then((data) => { if (data) TG_PROXY_PORT = data }),
+    db.get("tgbot_proxyauth").then((data) => { if (data) TG_PROXY_AUTH = data }),
+    db.get("tgbot_apihost").then((data) => { if (data) TG_API_HOST = data }),
+
+    db.get("ddbot_token").then((data) => { if (data) DD_BOT_TOKEN = data }),
+    db.get("ddbot_secret").then((data) => { if (data) DD_BOT_SECRET = data }),
+
+    db.get("qywxbot_key").then((data) => { if (data) QYWX_KEY = data }),
+    db.get("qywxapp_am").then((data) => { if (data) QYWX_AM = data }),
+
+    db.get("igot_key").then((data) => { if (data) IGOT_PUSH_KEY = data }),
+    db.get("pushplus_token").then((data) => { if (data) PUSH_PLUS_TOKEN = data }),
+    db.get("qywxapp_am").then((data) => { if (data) PUSH_PLUS_USER = data }),
+
+    db.get("coolpush_skey").then((data) => { if (data) QQ_SKEY = data }),
+    db.get("coolpush_mode").then((data) => { if (data) QQ_MODE = data }),
+
+    db.get("aibotk_key").then((data) => { if (data) AIBOTK_KEY = data })
+  ])
 }
 
-if (process.env.GOBOT_URL) {
-  GOBOT_URL = process.env.GOBOT_URL;
-}
-if (process.env.GOBOT_TOKEN) {
-  GOBOT_TOKEN = process.env.GOBOT_TOKEN;
-}
-if (process.env.GOBOT_QQ) {
-  GOBOT_QQ = process.env.GOBOT_QQ;
-}
-
-if (process.env.PUSH_KEY) {
-  SCKEY = process.env.PUSH_KEY;
-}
-
-if (process.env.DEER_KEY) {
-  PUSHDEER_KEY = process.env.DEER_KEY;
-  PUSHDEER_URL = process.env.DEER_URL;
-}
-
-if (process.env.CHAT_URL) {
-  CHAT_URL = process.env.CHAT_URL;
-}
-
-if (process.env.CHAT_TOKEN) {
-  CHAT_TOKEN = process.env.CHAT_TOKEN;
-}
-
-if (process.env.QQ_SKEY) {
-  QQ_SKEY = process.env.QQ_SKEY;
-}
-
-if (process.env.QQ_MODE) {
-  QQ_MODE = process.env.QQ_MODE;
-}
-
-if (process.env.BARK_PUSH) {
-  if (
-    process.env.BARK_PUSH.indexOf('https') > -1 ||
-    process.env.BARK_PUSH.indexOf('http') > -1
-  ) {
-    //兼容BARK自建用户
-    BARK_PUSH = process.env.BARK_PUSH;
-  } else {
-    BARK_PUSH = `https://api.day.app/${process.env.BARK_PUSH}`;
-  }
-  if (process.env.BARK_ICON) {
-    BARK_ICON = process.env.BARK_ICON;
-  }
-  if (process.env.BARK_SOUND) {
-    BARK_SOUND = process.env.BARK_SOUND;
-  }
-  if (process.env.BARK_GROUP) {
-    BARK_GROUP = process.env.BARK_GROUP;
-  }
-} else {
-  if (
-    BARK_PUSH &&
-    BARK_PUSH.indexOf('https') === -1 &&
-    BARK_PUSH.indexOf('http') === -1
-  ) {
-    //兼容BARK本地用户只填写设备码的情况
-    BARK_PUSH = `https://api.day.app/${BARK_PUSH}`;
-  }
-}
-if (process.env.TG_BOT_TOKEN) {
-  TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
-}
-if (process.env.TG_USER_ID) {
-  TG_USER_ID = process.env.TG_USER_ID;
-}
-if (process.env.TG_PROXY_AUTH) TG_PROXY_AUTH = process.env.TG_PROXY_AUTH;
-if (process.env.TG_PROXY_HOST) TG_PROXY_HOST = process.env.TG_PROXY_HOST;
-if (process.env.TG_PROXY_PORT) TG_PROXY_PORT = process.env.TG_PROXY_PORT;
-if (process.env.TG_API_HOST) TG_API_HOST = process.env.TG_API_HOST;
-
-if (process.env.DD_BOT_TOKEN) {
-  DD_BOT_TOKEN = process.env.DD_BOT_TOKEN;
-  if (process.env.DD_BOT_SECRET) {
-    DD_BOT_SECRET = process.env.DD_BOT_SECRET;
-  }
-}
-
-if (process.env.QYWX_KEY) {
-  QYWX_KEY = process.env.QYWX_KEY;
-}
-
-if (process.env.QYWX_AM) {
-  QYWX_AM = process.env.QYWX_AM;
-}
-
-if (process.env.IGOT_PUSH_KEY) {
-  IGOT_PUSH_KEY = process.env.IGOT_PUSH_KEY;
-}
-
-if (process.env.PUSH_PLUS_TOKEN) {
-  PUSH_PLUS_TOKEN = process.env.PUSH_PLUS_TOKEN;
-}
-if (process.env.PUSH_PLUS_USER) {
-  PUSH_PLUS_USER = process.env.PUSH_PLUS_USER;
-}
-
-if (process.env.AIBOTK_KEY) {
-  AIBOTK_KEY = process.env.AIBOTK_KEY;
-}
-if (process.env.AIBOTK_TYPE) {
-  AIBOTK_TYPE = process.env.AIBOTK_TYPE;
-}
-if (process.env.AIBOTK_NAME) {
-  AIBOTK_NAME = process.env.AIBOTK_NAME;
-}
-
-if (process.env.FSKEY) {
-  FSKEY = process.env.FSKEY;
-}
-//==========================云端环境变量的判断与接收=========================
 
 /**
  * sendNotify 推送通知功能
@@ -547,17 +465,19 @@ if (process.env.FSKEY) {
  */
 async function sendNotify(
   text,
-  desp,
+  desp = "",
   params = {},
-  author = '\n\n本通知 By：https://github.com/whyour/qinglong',
+  author = '\n\n本通知 By：sillyPlus',
 ) {
   //提供6种通知
   desp += author; //增加作者信息，防止被贩卖等
+  await init();
+  console.log([GOTIFY_URL, GOTIFY_TOKEN, GOTIFY_PRIORITY, GOBOT_URL, GOBOT_TOKEN, GOBOT_QQ, SCKEY, PUSHDEER_KEY, PUSHDEER_URL, CHAT_URL, CHAT_TOKEN, BARK_PUSH, BARK_ICON, BARK_SOUND, BARK_GROUP, TG_BOT_TOKEN, TG_USER_ID, TG_PROXY_HOST, TG_PROXY_PORT, TG_PROXY_AUTH, TG_API_HOST, DD_BOT_TOKEN, DD_BOT_SECRET, QYWX_KEY, QYWX_AM, IGOT_PUSH_KEY, PUSH_PLUS_TOKEN, PUSH_PLUS_USER, QQ_SKEY, QQ_MODE, AIBOTK_KEY, AIBOTK_TYPE, AIBOTK_NAME, FSKEY])
   await Promise.all([
     serverNotify(text, desp), //微信server酱
     pushPlusNotify(text, desp), //pushplus(推送加)
   ]);
-  //由于上述两种微信通知需点击进去才能查看到详情，故text(标题内容)携带了账号序号以及昵称信息，方便不点击也可知道是哪个京东哪个活动
+  // //由于上述两种微信通知需点击进去才能查看到详情，故text(标题内容)携带了账号序号以及昵称信息，方便不点击也可知道是哪个京东哪个活动
   text = text.match(/.*?(?=\s?-)/g) ? text.match(/.*?(?=\s?-)/g)[0] : text;
   await Promise.all([
     BarkNotify(text, desp, params), //iOS Bark APP
@@ -575,6 +495,68 @@ async function sendNotify(
   ]);
 }
 
+function querystring(params) {
+  return Object.keys(params).map(key => `${key}=${encodeURIComponent(JSON.stringify(params[key]))}`).join("&");
+}
+function get(options, recall = () => { }) {
+  const url = options.url
+  options["method"] = "GET"
+  fetch(options.url, options)
+    .then((resp) => {
+      resp.text().then((data) => {
+        let h = {}
+        resp.headers.forEach((value, name) => h[name] = value);
+        const res = {
+          // body: ReadableStream,
+          // bodyUsed: true,
+          headers: h,
+          // ok: false, // Response is not ok
+          // redirected: false,
+          status: resp.status,// HTTP status is 404.
+          statusText: resp.statusText,// Request not found
+          // type: "cors",
+          // url: "https://api.github.com/users/chrissycoyier/repos",
+        }
+        err = resp.ok ? "" : resp.statusText;
+        recall(err, res, data)
+      })
+    })
+    .catch((e) => console.log("get error:" + e))
+}
+function post(options, recall = () => { }) {
+  const url = options.url
+  options["method"] = "POST"
+  if (options.json && !options.body)
+    options.body = options.json
+  if (typeof (options.body == "object"))
+    options.body = JSON.stringify(options.body)
+  console.log(JSON.stringify(options))
+  fetch(options.url, options)
+    .then((resp) => {
+      resp.text().then((data) => {
+        let h = {}
+        resp.headers.forEach((value, name) => h[name] = value);
+        const res = {
+          // body: ReadableStream,
+          // bodyUsed: true,
+          headers: h,
+          // ok: false, // Response is not ok
+          // redirected: false,
+          status: resp.status,// HTTP status is 404.
+          statusText: resp.statusText,// Request not found
+          // type: "cors",
+          // url: "https://api.github.com/users/chrissycoyier/repos",
+        }
+        err = resp.ok ? "" : resp.statusText;
+        recall(err, res, data)
+      })
+    })
+    .catch((e) => console.log("post error:" + e))
+}
+function logErr(e, resp) {
+  resp ? console.log(e) : console.log(e + ":" + JSON.stringify(resp));
+}
+
 function gotifyNotify(text, desp) {
   return new Promise((resolve) => {
     if (GOTIFY_URL && GOTIFY_TOKEN) {
@@ -587,7 +569,7 @@ function gotifyNotify(text, desp) {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('gotify发送通知调用API失败！！\n');
@@ -601,7 +583,7 @@ function gotifyNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve();
         }
@@ -616,14 +598,18 @@ function gobotNotify(text, desp) {
   return new Promise((resolve) => {
     if (GOBOT_URL) {
       const options = {
-        url: `${GOBOT_URL}?access_token=${GOBOT_TOKEN}&${GOBOT_QQ}`,
-        json: { message: `${text}\n${desp}` },
+        url: `${GOBOT_URL}/send_msg?access_token=${GOBOT_TOKEN}&${GOBOT_QQ}`,
+        body: {
+          message: `${text}\n${desp}`,
+          "message_type": "private",
+          "user_id": GOBOT_QQ,
+        },
         headers: {
           'Content-Type': 'application/json',
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('发送go-cqhttp通知调用API失败！！\n');
@@ -639,7 +625,7 @@ function gobotNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -665,7 +651,7 @@ function serverNotify(text, desp) {
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('发送通知调用API失败！！\n');
@@ -683,7 +669,7 @@ function serverNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -707,7 +693,7 @@ function PushDeerNotify(text, desp) {
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('发送通知调用API失败！！\n');
@@ -725,7 +711,7 @@ function PushDeerNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -748,7 +734,7 @@ function ChatNotify(text, desp) {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('发送通知调用API失败！！\n');
@@ -762,7 +748,7 @@ function ChatNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e);
+          logErr(e);
         } finally {
           resolve(data);
         }
@@ -773,21 +759,17 @@ function ChatNotify(text, desp) {
   });
 }
 
-function BarkNotify(text, desp, params = {}) {
+function BarkNotify(text, desp, params) {
   return new Promise((resolve) => {
     if (BARK_PUSH) {
       const options = {
-        url: `${BARK_PUSH}/${encodeURIComponent(text)}/${encodeURIComponent(
-          desp,
-        )}?icon=${BARK_ICON}?sound=${BARK_SOUND}&group=${BARK_GROUP}&${querystring.stringify(
-          params,
-        )}`,
+        url: `${BARK_PUSH}/${encodeURIComponent(text)}/${encodeURIComponent(desp)}?icon=${BARK_ICON}?sound=${BARK_SOUND}&group=${BARK_GROUP}&${querystring(params)}`,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         timeout,
       };
-      $.get(options, (err, resp, data) => {
+      get(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('Bark APP发送通知调用API失败！！\n');
@@ -801,7 +783,7 @@ function BarkNotify(text, desp, params = {}) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve();
         }
@@ -840,7 +822,7 @@ function tgBotNotify(text, desp) {
         };
         Object.assign(options, { agent });
       }
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('telegram发送通知消息失败！！\n');
@@ -858,7 +840,7 @@ function tgBotNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -890,7 +872,7 @@ function ddBotNotify(text, desp) {
       hmac.update(`${dateNow}\n${DD_BOT_SECRET}`);
       const result = encodeURIComponent(hmac.digest('base64'));
       options.url = `${options.url}&timestamp=${dateNow}&sign=${result}`;
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('钉钉发送通知消息失败！！\n');
@@ -904,13 +886,13 @@ function ddBotNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
       });
     } else if (DD_BOT_TOKEN) {
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('钉钉发送通知消息失败！！\n');
@@ -924,7 +906,7 @@ function ddBotNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -951,7 +933,7 @@ function qywxBotNotify(text, desp) {
       timeout,
     };
     if (QYWX_KEY) {
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('企业微信发送通知消息失败！！\n');
@@ -965,7 +947,7 @@ function qywxBotNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -1010,7 +992,7 @@ function qywxamNotify(text, desp) {
         },
         timeout,
       };
-      $.post(options_accesstoken, (err, resp, data) => {
+      post(options_accesstoken, (err, resp, data) => {
         let html = desp.replace(/\n/g, '<br/>');
         let json = JSON.parse(data);
         let accesstoken = json.access_token;
@@ -1077,7 +1059,7 @@ function qywxamNotify(text, desp) {
           },
         };
 
-        $.post(options, (err, resp, data) => {
+        post(options, (err, resp, data) => {
           try {
             if (err) {
               console.log(
@@ -1099,7 +1081,7 @@ function qywxamNotify(text, desp) {
               }
             }
           } catch (e) {
-            $.logErr(e, resp);
+            logErr(e, resp);
           } finally {
             resolve(data);
           }
@@ -1123,13 +1105,13 @@ function iGotNotify(text, desp, params = {}) {
       }
       const options = {
         url: `https://push.hellyw.com/${IGOT_PUSH_KEY.toLowerCase()}`,
-        body: `title=${text}&content=${desp}&${querystring.stringify(params)}`,
+        body: `title=${text}&content=${desp}&${querystring(params)}`,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('发送通知调用API失败！！\n');
@@ -1143,7 +1125,7 @@ function iGotNotify(text, desp, params = {}) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -1172,7 +1154,7 @@ function pushPlusNotify(text, desp) {
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log(
@@ -1195,7 +1177,7 @@ function pushPlusNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -1243,7 +1225,7 @@ function aibotkNotify(text, desp) {
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('智能微秘书发送通知消息失败！！\n');
@@ -1257,7 +1239,7 @@ function aibotkNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }
@@ -1279,7 +1261,7 @@ function fsBotNotify(text, desp) {
         },
         timeout,
       };
-      $.post(options, (err, resp, data) => {
+      post(options, (err, resp, data) => {
         try {
           if (err) {
             console.log('发送通知调用API失败！！\n');
@@ -1293,7 +1275,7 @@ function fsBotNotify(text, desp) {
             }
           }
         } catch (e) {
-          $.logErr(e, resp);
+          logErr(e, resp);
         } finally {
           resolve(data);
         }

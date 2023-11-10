@@ -1,6 +1,6 @@
 /**作者
  * @author Cdle
- * @name Hello
+ * @name node测试
  * @version 1.0.5
  * @description 测试插件
  * @rule 测试
@@ -17,6 +17,60 @@ const {
   Bucket,
   utils: { buildCQTag, image, video },
 } = require("sillygirl");
+
+function get(t, e = (() => { })) {
+  t.headers && (delete t.headers["Content-Type"], delete t.headers["Content-Length"]),
+    this.isSurge() || this.isLoon() ? (this.isSurge() && this.isNeedRewrite && (t.headers = t.headers || {}, Object.assign(t.headers, {
+      "X-Surge-Skip-Scripting": !1
+    })), $httpClient.get(t, (t, s, i) => {
+      !t && s && (s.body = i, s.statusCode = s.status),
+        e(t, s, i)
+    })) : this.isQuanX() ? (this.isNeedRewrite && (t.opts = t.opts || {}, Object.assign(t.opts, {
+      hints: !1
+    })), $task.fetch(t).then(t => {
+      const {
+        statusCode: s,
+        statusCode: i,
+        headers: r,
+        body: o
+      } = t;
+      e(null, {
+        status: s,
+        statusCode: i,
+        headers: r,
+        body: o
+      }, o)
+    }, t => e(t))) : this.isNode() && (this.initGotEnv(t), this.got(t).on("redirect", (t, e) => {
+      try {
+        if (t.headers["set-cookie"]) {
+          const s = t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString();
+          s && this.ckjar.setCookieSync(s, null),
+            e.cookieJar = this.ckjar
+        }
+      } catch (t) {
+        this.logErr(t)
+      }
+    }).then(t => {
+      const {
+        statusCode: s,
+        statusCode: i,
+        headers: r,
+        body: o
+      } = t;
+      e(null, {
+        status: s,
+        statusCode: i,
+        headers: r,
+        body: o
+      }, o)
+    }, t => {
+      const {
+        message: s,
+        response: i
+      } = t;
+      e(s, i, i && i.body)
+    }))
+}
 
 
 (async () => {

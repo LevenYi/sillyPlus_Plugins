@@ -397,13 +397,15 @@ class Telegram {
     }
     sendText(id, msg, body) {
         const url = this.url + "/sendMessage";
+        const data = {
+            "chat_id": id,
+            "parse_mode": "Markdown",
+            "text": msg
+        }
         let option = {
             method: "post",
-            body: {
-                "chat_id": id,
-                "parse_mode": "Markdown",
-                "text": msg
-            }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
         }
         if (body) {
             option.body = body
