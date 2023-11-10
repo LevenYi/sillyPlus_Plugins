@@ -1,7 +1,8 @@
 /**
  * @title qinglong
+ * @module true
  * @origin 傻妞官方
- * @create_at 2023-07-09 18:36:32
+ * @create_at 2023-10-1 16:30:33
  * @description node版，修改自官方QingLOng模块
  * @author 佚名
  * @version v1.1.2
@@ -19,13 +20,13 @@
 // {client_id, client_secret, url, token: {value, unix}, remark}
 
 
-const {
-    Bucket
-} = require("sillygirl")
 
 
 class QingLong {
     constructor(client_id) {
+        const {
+            Bucket
+        } = require("sillygirl")
         this.qinglong = new Bucket("qinglong")
         this.client_id = client_id
         this.address = ""
@@ -494,7 +495,7 @@ class QingLong {
     async #api({ api, method, data, params, body: data2, formData }) {
         //console.debug("青龙请求：", JSON.stringify({ api, method, params, body: data ?? data2 ?? {} }))
         if (params)
-            params = Object.keys(params).map(key => `${key}=${encodeURIComponent(params[key])}`).join("&");
+            params = Object.keys(params).map(key => `${key}=${encodeURIComponent(JSON.stringify(params[key]))}`).join("&");
         else
             params = ""
         const options = {

@@ -1,9 +1,9 @@
 /** 
  * @author https://t.me/sillyGirl_Plugin
  * @module true
- * @create_at 2021-09-09 16:30:33
+ * @create_at 2023-10-1 16:30:33
  * @description 一些通用函数和网络接口以及数据
- * @version v1.0.8
+ * @version v1.0.0
  * @title something
  * @public true
  * @calss JD

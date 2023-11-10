@@ -17,7 +17,7 @@
 /********
  * 打开进入傻+执行文件同级目录下的“plugins”文件夹（没有则自行创建)
  * 创建文件夹“self_modules”与另一任意名文件夹(比如jd)
- * 在jd文件夹放入本文件，文件夹“self_modules”内放入qinglong.d.ts与something.d.ts文件
+ * 在jd文件夹放入本文件，文件夹“self_modules”内放入qinglong.js与something.js文件
  * 在傻+后台找到本插件(京东登陆)打开，点击右上角“表单”按钮进行配置
  * 本插件类似网页登陆，全程不经手ck，ck分发及维护由narkPro与rabbitPro负责
  * 若选择通知，需在sendNotify模块填写对应通知配置(待完成)
@@ -26,11 +26,6 @@
 const Form = () => { }
 
 Form([
-    {
-        title: "提交CK容器",
-        key: "jd_cookie.submitContainer",
-        tooltip: "客户直接发送CK时将其上传至的容器，填写傻+对接容器序号"
-    },
     {
         title: "narkPro地址",
         key: "jd_cookie.narkPro_addr",
@@ -48,40 +43,7 @@ Form([
             {
                 title: "rabbitPro上车容器",
                 key: "jd_cookie.rabbitPro_container",
-                tooltip: "rabbitPro所对接的容器序号"
-            }
-        ]
-    },
-    {
-        title: "登陆限制",
-        valueType: "group",
-        columns: [
-            {
-                title: "群白名单",
-                key: "jd_cookie.login_groupWhiteList",
-                tooltip: "允许上车的群聊白名单id,非白名单群禁止上车,多个群号使用&隔开"
-            },
-            {
-                title: "客户黑名单",
-                key: "jd_cookie.login_userBlackList",
-                tooltip: "拉黑客户的id,拉黑的账号禁止登陆，多个账号使用&隔开"
-            },
-            {
-
-                //title: "禁止重复登陆",
-                valueType: "group",
-                columns: [{
-                    title: "禁止重复登陆",
-                    key: "jd_cookie.login_forbidRe",
-                    valueType: "radio",
-                    tooltip: "是否禁止用户在账号未失效的情况下重复登陆（默认不禁止）",
-                    valueEnum: { true: { text: "是" }, false: { text: "否" } }
-                },
-                {
-                    title: "失效检查容器",
-                    key: "jd_cookie.login_checkContainer",
-                    tooltip: "若禁止重复登陆，则填入傻妞所对接的聚合容器序号，用于检查确认用户的账号是否已经失效"
-                }]
+                tooltip: "rabbitPro所对接的容器序号，例：1"
             }
         ]
     },
@@ -121,67 +83,107 @@ Form([
         ]
     },
     {
-        title: "通知渠道-待完成",
+        title: "登陆限制",
+        valueType: "group",
+        columns: [
+            {
+                title: "群白名单",
+                key: "jd_cookie.login_groupWhiteList",
+                tooltip: "允许上车的群聊白名单id,非白名单群禁止上车,多个群号使用&隔开"
+            },
+            {
+                title: "客户黑名单",
+                key: "jd_cookie.login_userBlackList",
+                tooltip: "拉黑客户的id,拉黑的账号禁止登陆，多个账号使用&隔开"
+            },
+            {
+
+                //title: "禁止重复登陆",
+                valueType: "group",
+                columns: [{
+                    title: "禁止重复登陆",
+                    valueType: "switch",
+                    key: "jd_cookie.login_forbidRe",
+                    tooltip: "是否禁止用户在账号未失效的情况下重复登陆（默认不禁止）",
+                },
+                {
+                    title: "失效检查容器",
+                    key: "jd_cookie.login_checkContainer",
+                    tooltip: "若禁止重复登陆，则填入傻+所对接的聚合容器序号，用于检查确认用户的账号是否已经失效，例：1,可不填"
+                }]
+            }
+        ]
+    },
+    {
+        title: "提交CK容器",
+        key: "jd_cookie.submitContainer",
+        tooltip: "客户直接发送CK时将其上传至的容器，填写傻+对接容器序号，例：1,可不填"
+    },
+    {
+        title: "通知",
         tooltip: "待完成",
         valueType: "group",
-        columns: [{
-            //title: "通知渠道",
-            dataIndex: "jd_cookie.login_notify",
-            valueType: "checkbox",
-            width: "150px",
-            tooltip: "客户登陆通知",
-            valueEnum: {
-                tgbot: { text: "tg机器人     " },
-                ddbot: { text: "钉钉机器人   " },
-                qywx: { text: "企业微信机器人" },
-                weserver: { text: "微信server酱 " },
-                pushplus: { text: "微信pushplus " },
-                gotify: { text: "gotify       " },
-                gocqhttp: { text: "go-cqhttp    " },
-                pushdeer: { text: "PushDeer     " },
-                bark: { text: "Bark App     " },
-                igot: { text: "iGot聚合推送  " },
-                coolpush: { text: "coolpush      " },
-                aibotk: { text: "智能微秘书    " },
-                fsbot: { text: "飞书机器人    " }
-            }
-        },
-        {
-            title: "傻+通知-待完成",
-            valueType: "group",
-            columns: [
-                {
-                    //title: "管理员",
-                    dataIndex: "jd_cookie.login_notifyMasters",
-                    valueType: "checkbox",
-                    tooltip: "客户登陆通知",
-                    width: "lg",
-                    valueEnum: { true: { text: "管理员" } }
-                },
-                {
-                    title: "渠道",
-                    dataIndex: "jd_cookie.login_notifyPlatform",
-                    valueType: "select",
-                    tooltip: "需傻+已对接该机器人",
-                    width: "xs",
-                    valueEnum: {
-                        qq: {
-                            text: "QQ",
-                        },
-                        tgbot: {
-                            text: "Telegram",
-                        },
-                        wx: {
-                            text: "微信",
+        columns: [
+            //     {
+            //     //title: "通知渠道",
+            //     dataIndex: "jd_cookie.login_notify",
+            //     valueType: "checkbox",
+            //     width: "150px",
+            //     tooltip: "客户登陆通知",
+            //     valueEnum: {
+            //         tgbot: { text: "Telegram机器人     " },
+            //         ddbot: { text: "钉钉机器人   " },
+            //         qywxbot: { text: "企业微信机器人" },
+            //         qywxapp: { text: "企业微信应用" },
+            //         weserver: { text: "微信server酱 " },
+            //         pushplus: { text: "微信pushplus " },
+            //         gocqhttp: { text: "go-cqhttp    " },
+            //         pushdeer: { text: "PushDeer     " },
+            //         gotify: { text: "gotify       " },
+            //         synologychat: { text: "Synology Chat" },
+            //         bark: { text: "Bark App     " },
+            //         igot: { text: "iGot聚合推送  " },
+            //         coolpush: { text: "coolpush      " },
+            //         aibotk: { text: "智能微秘书    " },
+            //         fsbot: { text: "飞书机器人    " }
+            //     }
+            // },
+            {
+                title: "傻+通知-待完成",
+                valueType: "group",
+                columns: [
+                    {
+                        title: "通知管理员",
+                        dataIndex: "jd_cookie.login_notifyMasters",
+                        valueType: "switch",
+                        tooltip: "客户登陆通知",
+                        width: "lg"
+                    },
+                    {
+                        title: "渠道",
+                        dataIndex: "jd_cookie.login_notifyPlatform",
+                        valueType: "select",
+                        tooltip: "需傻+已对接该机器人",
+                        width: "xs",
+                        valueEnum: {
+                            qq: {
+                                text: "QQ",
+                            },
+                            tgbot: {
+                                text: "Telegram",
+                            },
+                            wx: {
+                                text: "微信",
+                            }
                         }
-                    }
-                },
-                {
-                    title: "账号ID",
-                    tooltip: "需推送至的账号",
-                    dataIndex: "jd_cookie.login_notifyID"
-                }]
-        }]
+                    },
+                    {
+                        title: "账号ID",
+                        tooltip: "需推送至的账号",
+                        dataIndex: "jd_cookie.login_notifyID"
+                    }]
+            }
+        ]
     }
 ])
 
@@ -201,8 +203,8 @@ var pins = [] //用户已绑定的pin
 
 
 const $ = Env(s);
-const ql = require("../self_modules/qinglong.d.ts");
-const { JD, CQ_Image, notifyMasters, getBind } = require("../self_modules/something.d.ts");
+const ql = require("../self_modules/qinglong.js");
+const { JD, CQ_Image, notifyMasters, getBind } = require("../self_modules/something.js");
 const timeout = 3 * 60 * 1000;	//输入等待时长
 const VerifyTimes = 3;	//验证重试次数
 
@@ -331,14 +333,30 @@ const VerifyTimes = 3;	//验证重试次数
         await $.reply(message)
     }
     else if ($.content.indexOf("wskey") != -1) {	//提交wskey
+        if (isNaN(submitContainer)) {
+            s.continue()
+            return
+        }
         await $.recallMessage($.messageId)
         await sleep(400)
+        if (submitContainer < 0) {
+            await $.reply("请联系管理员正确设置提交cookie容器！")
+            return
+        }
         env.name = "JD_WSCK"
         env.value = $.content.match(/pin=[^;]+; ?wskey=[^;]+;/)[0]
         if (SubmitCK(await CreatQl(clients[submitContainer]), env))
             await $.reply("提交成功！")
     }
     else {	//提交ck
+        if (isNaN(submitContainer)) {
+            s.continue()
+            return
+        }
+        if (submitContainer < 0) {
+            await $.reply("请联系管理员正确设置提交cookie容器！")
+            return
+        }
         env.value = $.content.match(/pt_key=[^;]+; ?pt_pin=[^;]+;/)[0];
         env.name = "JD_COOKIE";
         const jd = new JD(env.value)
@@ -696,7 +714,11 @@ async function SendSms(Tel, addr, token) {
         option.headers["Authorization"] = "Bearer " + token
         option.body["botApitoken"] = token
     }
-    if (container_id)
+    if (isNaN(container_id)) {
+        await $.reply("请联系管理员正确设置rabbitPro上车容器！")
+        return false
+    }
+    else if (container_id)
         option.body["container_id"] = container_id
     let resp = await $.request(option)
     if (resp.status == 200) {
@@ -841,7 +863,7 @@ function Env(s, title) {
             if (typeof (options) == "object") {
                 url = options.url
                 if (!options.headers["Content-Type"])
-                    options.headers["Content-Type"] = "application / json"
+                    options.headers["Content-Type"] = "application/json"
                 option = {
                     method: options.method ?? "GET",
                     headers: options.headers ?? {},
