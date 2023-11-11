@@ -398,8 +398,10 @@ async function NarkProSms(Tel) {
     if (await SendSms(Tel, narkPro + "/sms/SendSMS")) {
         console.log("narkPro在线")
         let result = await VerifyCode(Tel, narkPro)
-        if (result && result != true)
+        if (result && result != true) {
             await $.reply(result + "登陆成功！")
+            Notify(result + ":登陆成功！\n登陆方式：narkPro短信")
+        }
         return result
     }
     else {
@@ -416,8 +418,10 @@ async function RabbitProSms(Tel) {
     if (await SendSms(Tel, rabbitPro + "/sms/sendSMS")) {
         console.log("rabbitPro在线")
         let result = await VerifyCode(Tel, rabbitPro)
-        if (result && result != true)
+        if (result && result != true) {
             await $.reply(result + "登陆成功！")
+            Notify(result + ":登陆成功！\n登陆方式：rabbitPro短信")
+        }
         return result
     }
     else {
@@ -435,7 +439,7 @@ async function NarkProQr() {
     if (!data || !data.success) {
         let tip = "报告老板,narkPro面板疑似挂了\n"
         tip += data ? JSON.stringify(data) : ""
-        NotifyMasters(tip)
+        Notify(tip)
         if (data.message)
             await $.reply(data.message)
         return false
@@ -469,6 +473,7 @@ async function NarkProQr() {
         if (data.success) {	//登陆成功
             let pin = decodeURI(data.data.username) == data.data.username ? encodeURI(data.data.username) : data.data.username	//分析pin是否已经过编码，未编码则进行编码，以防中文pin
             await $.reply(decodeURI(pin) + "登陆成功，账号更新中...\n请等待几分钟后再查询账号信息")
+            Notify(pin + ":登陆成功！\n登陆方式：narkPro扫码")
             return pin
         }
         else if (data.message == "请先获取二维码") {	//二维码失效      
@@ -536,6 +541,7 @@ async function RabbitProQr() {
         if (data.code == 200) {	//登陆成功
             let pin = decodeURI(data.pin) == data.pin ? encodeURI(data.pin) : data.pin
             await $.reply(decodeURI(pin) + "登陆成功，账号更新中...\n请等待几分钟后再查询账号信息")
+            Notify(pin + ":登陆成功！\n登陆方式：rabbitPro扫码")
             return pin
         }
         else if (data.code == 503) {	//扫码后取消登陆
