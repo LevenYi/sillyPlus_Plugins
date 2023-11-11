@@ -1,4 +1,4 @@
-# sillyPlus_Plugins
+# 废弃
 
 傻+机器人插件
 

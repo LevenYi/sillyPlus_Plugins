@@ -385,6 +385,8 @@ const VerifyTimes = 3;	//验证重试次数
         await new Bucket("pin" + $.platform.toUpperCase()).set(pin, $.userId)
 })()
 
+$.destroy()
+
 /**
  * 
  * @param {string} Tel - 手机号
@@ -823,7 +825,7 @@ const handle = async function (s) {
 function Notify(msg) {
     if (selector && selector.length) {
         const { sendNotify } = require("../sendNotify/main.js");
-        sendNotify("傻+ 京东登陆", msg, {}, "", selector);
+        sendNotify("【傻+ 京东登陆】", msg, {}, "", selector);
     }
     NotifyMasters(msg);
 }
@@ -933,7 +935,8 @@ function Env(s, title) {
             }
         }
         async destroy() {
-            console.log(`【${title}】结束`)
+            if (title)
+                console.log(`【${title}】结束`)
             this.s.destroy()
         }
     }
