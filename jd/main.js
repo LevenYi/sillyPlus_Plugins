@@ -124,65 +124,65 @@ Form([
         tooltip: "待完成",
         valueType: "group",
         columns: [
-            //     {
-            //     //title: "通知渠道",
-            //     dataIndex: "jd_cookie.login_notify",
-            //     valueType: "checkbox",
-            //     width: "150px",
-            //     tooltip: "客户登陆通知",
-            //     valueEnum: {
-            //         tgbot: { text: "Telegram机器人     " },
-            //         ddbot: { text: "钉钉机器人   " },
-            //         qywxbot: { text: "企业微信机器人" },
-            //         qywxapp: { text: "企业微信应用" },
-            //         weserver: { text: "微信server酱 " },
-            //         pushplus: { text: "微信pushplus " },
-            //         gocqhttp: { text: "go-cqhttp    " },
-            //         pushdeer: { text: "PushDeer     " },
-            //         gotify: { text: "gotify       " },
-            //         synologychat: { text: "Synology Chat" },
-            //         bark: { text: "Bark App     " },
-            //         igot: { text: "iGot聚合推送  " },
-            //         coolpush: { text: "coolpush      " },
-            //         aibotk: { text: "智能微秘书    " },
-            //         fsbot: { text: "飞书机器人    " }
-            //     }
-            // },
             {
-                title: "傻+通知-待完成",
-                valueType: "group",
-                columns: [
-                    {
-                        title: "通知管理员",
-                        dataIndex: "jd_cookie.login_notifyMasters",
-                        valueType: "switch",
-                        tooltip: "客户登陆通知",
-                        width: "lg"
-                    },
-                    {
-                        title: "渠道",
-                        dataIndex: "jd_cookie.login_notifyPlatform",
-                        valueType: "select",
-                        tooltip: "需傻+已对接该机器人",
-                        width: "xs",
-                        valueEnum: {
-                            qq: {
-                                text: "QQ",
-                            },
-                            tgbot: {
-                                text: "Telegram",
-                            },
-                            wx: {
-                                text: "微信",
-                            }
-                        }
-                    },
-                    {
-                        title: "账号ID",
-                        tooltip: "需推送至的账号",
-                        dataIndex: "jd_cookie.login_notifyID"
-                    }]
-            }
+                title: "渠道",
+                dataIndex: "jd_cookie.login_notify",
+                valueType: "checkbox",
+                width: "150px",
+                tooltip: "已选选项需在sendNotify模块填写配置",
+                valueEnum: {
+                    tgbot: { text: "Telegram机器人     " },
+                    ddbot: { text: "钉钉机器人   " },
+                    qywxbot: { text: "企业微信机器人" },
+                    qywxapp: { text: "企业微信应用" },
+                    weserver: { text: "微信server酱 " },
+                    pushplus: { text: "微信pushplus " },
+                    gocqhttp: { text: "go-cqhttp    " },
+                    pushdeer: { text: "PushDeer     " },
+                    gotify: { text: "gotify       " },
+                    synologychat: { text: "Synology Chat" },
+                    bark: { text: "Bark App     " },
+                    igot: { text: "iGot聚合推送  " },
+                    coolpush: { text: "coolpush      " },
+                    aibotk: { text: "智能微秘书    " },
+                    fsbot: { text: "飞书机器人    " }
+                }
+            },
+            // {
+            //     title: "傻+通知-待完成",
+            //     valueType: "group",
+            //     columns: [
+            //         {
+            //             title: "通知管理员",
+            //             dataIndex: "jd_cookie.login_notifyMasters",
+            //             valueType: "switch",
+            //             tooltip: "客户登陆通知",
+            //             width: "lg"
+            //         },
+            //         {
+            //             title: "渠道",
+            //             dataIndex: "jd_cookie.login_notifyPlatform",
+            //             valueType: "select",
+            //             tooltip: "需傻+已对接该机器人",
+            //             width: "xs",
+            //             valueEnum: {
+            //                 qq: {
+            //                     text: "QQ",
+            //                 },
+            //                 tgbot: {
+            //                     text: "Telegram",
+            //                 },
+            //                 wx: {
+            //                     text: "微信",
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             title: "账号ID",
+            //             tooltip: "需推送至的账号",
+            //             dataIndex: "jd_cookie.login_notifyID"
+            //         }]
+            // }
         ]
     }
 ])
@@ -194,25 +194,35 @@ Form([
 
 const { sender: s, Bucket, sleep, utils: { buildCQTag, image, video }, } = require("sillygirl");
 
-const jddb = new Bucket("jd_cookie")
+const jddb = new Bucket("jd_cookie");
 
-var narkPro, rabbitPro, container_id, groupWhiteList, userBlackList, forbidReLogin, checkContainer, submitContainer
+var narkPro = "";
+var rabbitPro = "";
+var container_id = "";
+var groupWhiteList = "";
+var userBlackList = "";
+var forbidReLogin = "";
+var checkContainer = "";
+var submitContainer = "";
+var selector = [];
 //var admin, platform, userId, userName, chatId, chatName, messageId, content, botId 
 
 var pins = [] //用户已绑定的pin
 
 
 const $ = Env(s);
+const { sendNotify } = require("../sendNotify/main.js");
 const ql = require("../self_modules/qinglong.js");
 const { JD, CQ_Image, notifyMasters, getBind } = require("../self_modules/something.js");
 const timeout = 3 * 60 * 1000;	//输入等待时长
 const VerifyTimes = 3;	//验证重试次数
 
 (async () => {
+
+    await InitBucket();
     let env = { name: "", value: "", remarks: "" };
     let pin = "";
     const qldb = new Bucket("qinglong")
-    await InitBucket();
     const clients = await qldb.keys()
     pins = await getBind($.platform, $.userId)
     userBlackList = userBlackList ? userBlackList.toString().split("&") : [];
@@ -231,12 +241,12 @@ const VerifyTimes = 3;	//验证重试次数
     // }
     if ($.content.match(/^(短信)?登(陆|录)$/)) {
         //检查绑定账号是否失效
-        if (forbidReLogin && pins.length) {
-            if (! await NeedLogin(pins, await CreatQl(clients[checkContainer]))) {
-                await $.reply("您的账号尚未失效，无需重新登陆\n若需添加新账号，请联系管理员或者使用短信登陆")
-                return
-            }
-        }
+        // if (forbidReLogin && pins.length) {
+        //     if (! await NeedLogin(pins, await CreatQl(clients[checkContainer]))) {
+        //         await $.reply("您的账号尚未失效，无需重新登陆\n若需添加新账号，请联系管理员或者使用短信登陆")
+        //         return
+        //     }
+        // }
         await $.reply("京东呆瓜助手为您服务，请输入手机号码(可回复q退出):")
         let inp = await s.listen({ handle, timeout })
         let Tel = ""
@@ -394,7 +404,7 @@ async function NarkProSms(Tel) {
         return result
     }
     else {
-        NotifyMasters("报告老板，narkPro疑似挂了！")
+        Notify("报告老板，narkPro疑似挂了！")
         return false
     }
 }
@@ -412,7 +422,7 @@ async function RabbitProSms(Tel) {
         return result
     }
     else {
-        NotifyMasters("报告老板，rabbitPro疑似挂了！")
+        Notify("报告老板，rabbitPro疑似挂了！")
         return false
     }
 }
@@ -488,7 +498,7 @@ async function RabbitProQr() {
     if (!data || data.code != 0) {
         let tip = "报告老板,rabbit扫码面板疑似挂了\n"
         tip += data ? JSON.stringify(data) : ""
-        NotifyMasters(tip)
+        Notify(tip)
         if (data.message)
             await $.reply(data.message)
         return false
@@ -760,25 +770,43 @@ async function CreatQl(client_id) {
 }
 
 async function InitBucket() {
-    narkPro = await jddb.get("narkPro_addr")
+    await Promise.all([
+        jddb.get("narkPro_addr").then((data) => narkPro = data),
 
-    rabbitPro = await jddb.get("rabbitPro_addr")
-    container_id = Number(await jddb.get("rabbitPro_container")) + 1
+        jddb.get("rabbitPro_addr").then((data) => rabbitPro = data),
+        jddb.get("rabbitPro_container").then((data) => container_id = Number(data) + 1),
 
-    //允许上车的群聊白名单id
-    groupWhiteList = await jddb.get("login_groupWhiteList")
+        jddb.get("login_groupWhiteList").then((data) => groupWhiteList = data),
 
-    //客户黑名单，黑名单客户禁止上车
-    userBlackList = await jddb.get("login_userBlackList")
+        jddb.get("login_userBlackList").then((data) => userBlackList = data),
 
-    //是否禁止用户在账号未失效的情况下重复登陆
-    forbidReLogin = await jddb.get("login_forbidRe")
+        jddb.get("login_forbidRe").then((data) => forbidReLogin = data),
 
-    checkContainer = await jddb.get("login_checkContainer") - 1
+        jddb.get("login_checkContainer").then((data) => checkContainer = data - 1),
 
-    submitContainer = await jddb.get("submitContainer") - 1
+        jddb.get("submitContainer").then((data) => submitContainer = data - 1),
 
-    return { narkPro, rabbitPro, container_id, groupWhiteList, userBlackList, forbidReLogin, checkContainer }
+        jddb.get("login_notify").then((data) => selector = data)
+    ])
+    // narkPro = await jddb.get("narkPro_addr")
+
+    // rabbitPro = await jddb.get("rabbitPro_addr")
+    // container_id = Number(await jddb.get("rabbitPro_container")) + 1
+
+    // //允许上车的群聊白名单id
+    // groupWhiteList = await jddb.get("login_groupWhiteList")
+
+    // //客户黑名单，黑名单客户禁止上车
+    // userBlackList = await jddb.get("login_userBlackList")
+
+    // //是否禁止用户在账号未失效的情况下重复登陆
+    // forbidReLogin = await jddb.get("login_forbidRe")
+
+    // checkContainer = await jddb.get("login_checkContainer") - 1
+
+    // submitContainer = await jddb.get("submitContainer") - 1
+
+    // return { narkPro, rabbitPro, container_id, groupWhiteList, userBlackList, forbidReLogin, checkContainer }
 }
 
 const handle = async function (s) {
@@ -787,6 +815,10 @@ const handle = async function (s) {
     await sleep(400)
 }
 
+function Notify(msg) {
+    sendNotify("傻+ 京东登陆", msg, {}, "", selector);
+    NotifyMasters(msg);
+}
 function NotifyMasters(msg) {
     //待实现
     //if (!$.admin)
@@ -814,15 +846,26 @@ function Env(s, title) {
             this.#init()
         }
         async #init() {
-            this.admin = await s.isAdmin();
-            this.platform = (await s.getPlatform()).toString();
-            this.userId = (await s.getUserId()).toString();
-            this.userName = (await s.getUserName()).toString();
-            this.chatId = (await s.getChatId()).toString();
-            this.chatName = (await s.getChatName()).toString();
-            this.messageId = (await s.getMessageId()).toString();
-            this.content = (await s.getContent()).toString();
-            this.botId = (await s.getBotId()).toString();
+            await Promise.all([
+                s.isAdmin().then((data) => this.admin = data),
+                s.getPlatform().then((data) => this.platform = data),
+                s.getUserId().then((data) => this.userId = data),
+                s.getUserName().then((data) => this.userName = data),
+                s.getChatId().then((data) => this.chatId = data),
+                s.getChatName().then((data) => this.chatName = data),
+                s.getMessageId().then((data) => this.messageId = data),
+                s.getContent().then((data) => this.content = data),
+                s.getBotId().then((data) => this.botId = data)
+            ])
+            // this.admin = await s.isAdmin();
+            // this.platform = (await s.getPlatform()).toString();
+            // this.userId = (await s.getUserId()).toString();
+            // this.userName = (await s.getUserName()).toString();
+            // this.chatId = (await s.getChatId()).toString();
+            // this.chatName = (await s.getChatName()).toString();
+            // this.messageId = (await s.getMessageId()).toString();
+            // this.content = (await s.getContent()).toString();
+            // this.botId = (await s.getBotId()).toString();
         }
         async recallMessage(messageId) {
             await this.s.doAction({

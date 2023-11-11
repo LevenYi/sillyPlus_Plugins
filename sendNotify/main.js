@@ -1,7 +1,7 @@
 /**
 * @title sendNotify
 * @create_at 2023-10-21 14:02:13
-* @description 推送通知，修改自青龙sendNotify
+* @description 推送通知，修改自青龙sendNotify,未完全测试
 * @author https://t.me/sillyGirl_Plugin
 * @module true
 * @version v1.0.0
@@ -11,7 +11,11 @@
  * @param text 通知头
  * @param desp 通知体
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
- * @param author 作者仓库等信息  例：`本通知 By：https://github.com/whyour/qinglong`
+ * @param author 作者等信息  例：`本通知 By：https://t.me/sillyGirl_Plugin`
+ * @param selector 通知选择器，未处于选择数组内的渠道不通知，默认通知所有渠道 ["wxpush","tgbot","ddbot","qywxbot","qywxapp","weserver","pushplus","gocqhttp","pushdeer","gotify","synologychat","bark","igot","coolpush","aibotk","fsbot"]
+ * 
+ * 
+ * sendNotify(text,desp,params,author,selector)
  */
 
 
@@ -20,7 +24,23 @@
 
 const Form = (data) => { }
 
-
+Form({
+  title: "wxpush配置",
+  valueType: "group",
+  columns: [
+    {
+      title: "UID",
+      key: "notify.wxpush_uid",
+      tooltip: "关注公众号：wxpusher，然后点击「我的」-「我的UID」查询到UID"
+    },
+    {
+      title: "token",
+      // width: "100px",
+      key: "notify.wxpush_token",
+      tooltip: "wxpush后台:https://wxpusher.zjiecode.com/admin/ 创建应用后获取"
+    }
+  ]
+})
 Form({
   title: "gotify配置",
   valueType: "group",
@@ -50,7 +70,7 @@ Form({
     {
       title: "地址",
       key: "notify.gocq_url",
-      tooltip: "示例：https://push.example.de:8080"
+      tooltip: "示例：https://push.example.de:8080，gocq配置见 https://docs.go-cqhttp.org/guide/config.html#%E9%85%8D%E7%BD%AE%E4%BF%A1%E6%81%AF"
     },
     {
       title: "token",
@@ -219,7 +239,7 @@ Form({
   ]
 })
 Form({
-  title: "微信push+配置",
+  title: "微信pushplus配置",
   valueType: "group",
   tooltip: "官方文档：http://www.pushplus.plus/",
   columns: [
@@ -235,23 +255,23 @@ Form({
     }
   ]
 })
-Form({
-  title: "Cool Push配置",
-  valueType: "group",
-  tooltip: "官方文档：https://cp.xuthus.cc/docs",
-  columns: [
-    {
-      title: "key",
-      key: "notify.coolpush_skey",
-      tooltip: "Cool Push登录授权后推送消息的调用代码Skey"
-    },
-    {
-      title: "推送模式",
-      key: "notify.coolpush_mode",
-      tooltip: "详情请登录获取QQ_SKEY后见https://cp.xuthus.cc/feat"
-    }
-  ]
-})
+// Form({
+//   title: "Cool Push配置",
+//   valueType: "group",
+//   tooltip: "官方文档：https://cp.xuthus.cc/docs",
+//   columns: [
+//     {
+//       title: "key",
+//       key: "notify.coolpush_skey",
+//       tooltip: "Cool Push登录授权后推送消息的调用代码Skey"
+//     },
+//     {
+//       title: "推送模式",
+//       key: "notify.coolpush_mode",
+//       tooltip: "详情请登录获取QQ_SKEY后见https://cp.xuthus.cc/feat"
+//     }
+//   ]
+// })
 Form({
   title: "智能微秘书设置",
   valueType: "group",
@@ -293,6 +313,14 @@ const { sender: s, Bucket, sleep, utils: { buildCQTag, image, video }, } = requi
 
 const timeout = 15000; //超时时间(单位毫秒)
 const db = new Bucket("notify")
+var SELECTOR = ["wxpush", "tgbot", "ddbot", "qywxbot", "qywxapp", "weserver", "pushplus", "gocqhttp", "pushdeer", "gotify", "synologychat", "bark", "igot", "coolpush", "aibotk", "fsbot"]
+
+
+// =======================================wxpusher通知设置区域==============================================
+//wxpush_uid 关注公众号：wxpusher，然后点击「我的」-「我的UID」查询到UID
+//wxpush_token 后台https://wxpusher.zjiecode.com/admin/ 创建应用后得到
+let WXPUSH_UID = "";
+let WXPUSH_TOKEN = "";
 
 // =======================================gotify通知设置区域==============================================
 //gotify_url 填写gotify地址,如https://push.example.de:8080
@@ -411,6 +439,9 @@ let FSKEY = '';
 
 async function init() {
   await Promise.all([
+    db.get("wxpush_uid").then((data) => { if (data) WXPUSH_UID = data }),
+    db.get("wxpush_token").then((data) => { if (data) WXPUSH_TOKEN = data }),
+
     db.get("gotify_url").then((data) => { if (data) GOTIFY_URL = data }),
     db.get("gotify_token").then((data) => { if (data) GOTIFY_TOKEN = data }),
 
@@ -467,33 +498,76 @@ async function sendNotify(
   text,
   desp = "",
   params = {},
-  author = '\n\n本通知 By：sillyPlus',
+  author = '\n\n-本通知 By：sillyPlus',
+  selector
 ) {
+
   //提供6种通知
   desp += author; //增加作者信息，防止被贩卖等
   await init();
-  console.log([GOTIFY_URL, GOTIFY_TOKEN, GOTIFY_PRIORITY, GOBOT_URL, GOBOT_TOKEN, GOBOT_QQ, SCKEY, PUSHDEER_KEY, PUSHDEER_URL, CHAT_URL, CHAT_TOKEN, BARK_PUSH, BARK_ICON, BARK_SOUND, BARK_GROUP, TG_BOT_TOKEN, TG_USER_ID, TG_PROXY_HOST, TG_PROXY_PORT, TG_PROXY_AUTH, TG_API_HOST, DD_BOT_TOKEN, DD_BOT_SECRET, QYWX_KEY, QYWX_AM, IGOT_PUSH_KEY, PUSH_PLUS_TOKEN, PUSH_PLUS_USER, QQ_SKEY, QQ_MODE, AIBOTK_KEY, AIBOTK_TYPE, AIBOTK_NAME, FSKEY])
-  await Promise.all([
-    serverNotify(text, desp), //微信server酱
-    pushPlusNotify(text, desp), //pushplus(推送加)
-  ]);
-  // //由于上述两种微信通知需点击进去才能查看到详情，故text(标题内容)携带了账号序号以及昵称信息，方便不点击也可知道是哪个京东哪个活动
+  if (!selector?.length)
+    selector = SELECTOR
+  else
+    //   console.log("通知以下渠道：" + selector)
+    //console.log([WXPUSH_UID,WXPUSH_TOKEN,GOTIFY_URL, GOTIFY_TOKEN, GOTIFY_PRIORITY, GOBOT_URL, GOBOT_TOKEN, GOBOT_QQ, SCKEY, PUSHDEER_KEY, PUSHDEER_URL, CHAT_URL, CHAT_TOKEN, BARK_PUSH, BARK_ICON, BARK_SOUND, BARK_GROUP, TG_BOT_TOKEN, TG_USER_ID, TG_PROXY_HOST, TG_PROXY_PORT, TG_PROXY_AUTH, TG_API_HOST, DD_BOT_TOKEN, DD_BOT_SECRET, QYWX_KEY, QYWX_AM, IGOT_PUSH_KEY, PUSH_PLUS_TOKEN, PUSH_PLUS_USER, QQ_SKEY, QQ_MODE, AIBOTK_KEY, AIBOTK_TYPE, AIBOTK_NAME, FSKEY])
+    console.log([text, desp, params, author, selector].join("\n"))
   text = text.match(/.*?(?=\s?-)/g) ? text.match(/.*?(?=\s?-)/g)[0] : text;
-  await Promise.all([
-    BarkNotify(text, desp, params), //iOS Bark APP
-    tgBotNotify(text, desp), //telegram 机器人
-    ddBotNotify(text, desp), //钉钉机器人
-    qywxBotNotify(text, desp), //企业微信机器人
-    qywxamNotify(text, desp), //企业微信应用消息推送
-    iGotNotify(text, desp, params), //iGot
-    gobotNotify(text, desp), //go-cqhttp
-    gotifyNotify(text, desp), //gotify
-    ChatNotify(text, desp), //synolog chat
-    PushDeerNotify(text, desp), //PushDeer
-    aibotkNotify(text, desp), //智能微秘书
-    fsBotNotify(text, desp), //飞书机器人
-  ]);
+  let funcs = []
+  if (selector.includes("wxpush"))
+    funcs.push(wxpushNotify(text, desp))
+  if (selector.includes("tgbot"))
+    funcs.push(tgBotNotify(text, desp))
+  if (selector.includes("ddbot"))
+    funcs.push(ddBotNotify(text, desp))
+  if ((selector.includes("qywxbot")))
+    funcs.push(qywxBotNotify(text, desp))
+  if (selector.includes("qywxapp"))
+    funcs.push(qywxamNotify(text, desp))
+  if (selector.includes("weserver"))
+    funcs.push(serverNotify(text, desp))
+  if ((selector.includes("pushplus")))
+    funcs.push(pushPlusNotify(text, desp))
+  if (selector.includes("gocqhttp"))
+    funcs.push(gobotNotify(text, desp))
+  if (selector.includes("pushdeer"))
+    funcs.push(PushDeerNotify(text, desp))
+  if ((selector.includes("gotify")))
+    funcs.push(gotifyNotify(text, desp))
+  if (selector.includes("synologychat"))
+    funcs.push(ChatNotify(text, desp))
+  if (selector.includes("bark"))
+    funcs.push(BarkNotify(text, desp, params))
+  if ((selector.includes("igot")))
+    funcs.push(iGotNotify(text, desp, params))
+  // if(selector.includes("coolpush"))
+  //   funcs.push(coo(text, desp))
+  if (selector.includes("aibotk"))
+    funcs.push(aibotkNotify(text, desp))
+  if ((selector.includes("fsbot")))
+    funcs.push(fsBotNotify(text, desp))
+  await Promise.all(funcs)
+  // await Promise.all([
+  //   serverNotify(text, desp), //微信server酱
+  //   pushPlusNotify(text, desp), //pushplus(推送加)
+  // ]);
+  // //由于上述两种微信通知需点击进去才能查看到详情，故text(标题内容)携带了账号序号以及昵称信息，方便不点击也可知道是哪个京东哪个活动
+  // await Promise.all([
+  //   BarkNotify(text, desp, params), //iOS Bark APP
+  //   tgBotNotify(text, desp), //telegram 机器人
+  //   ddBotNotify(text, desp), //钉钉机器人
+  //   qywxBotNotify(text, desp), //企业微信机器人
+  //   qywxamNotify(text, desp), //企业微信应用消息推送
+  //   iGotNotify(text, desp, params), //iGot
+  //   gobotNotify(text, desp), //go-cqhttp
+  //   gotifyNotify(text, desp), //gotify
+  //   ChatNotify(text, desp), //synolog chat
+  //   PushDeerNotify(text, desp), //PushDeer
+  //   aibotkNotify(text, desp), //智能微秘书
+  //   fsBotNotify(text, desp), //飞书机器人
+  // ]);
 }
+
+
 
 function querystring(params) {
   return Object.keys(params).map(key => `${key}=${encodeURIComponent(JSON.stringify(params[key]))}`).join("&");
@@ -528,13 +602,14 @@ function post(options, recall = () => { }) {
   options["method"] = "POST"
   if (options.json && !options.body)
     options.body = options.json
-  if (typeof (options.body == "object"))
+  if (typeof (options.body) == "object")
     options.body = JSON.stringify(options.body)
   console.log(JSON.stringify(options))
   fetch(options.url, options)
     .then((resp) => {
       resp.text().then((data) => {
         let h = {}
+        //console.log("data:"+data)
         resp.headers.forEach((value, name) => h[name] = value);
         const res = {
           // body: ReadableStream,
@@ -555,6 +630,49 @@ function post(options, recall = () => { }) {
 }
 function logErr(e, resp) {
   resp ? console.log(e) : console.log(e + ":" + JSON.stringify(resp));
+}
+
+function wxpushNotify(text, desp) {
+  return new Promise((resolve) => {
+    if (WXPUSH_UID && WXPUSH_TOKEN) {
+      const options = {
+        url: `https://wxpusher.zjiecode.com/api/send/message`,
+        body: {
+          "appToken": WXPUSH_TOKEN,
+          "content": desp,
+          "summary": text,
+          "contentType": 1,
+          "uids": [
+            WXPUSH_UID
+          ],
+        },
+        headers: {
+          'Content-Type': "application/json",
+        },
+      };
+      post(options, (err, resp, data) => {
+        try {
+          if (err) {
+            console.log('wxpush发送通知调用API失败！！\n');
+            console.log(err);
+          } else {
+            data = JSON.parse(data);
+            if (data.success) {
+              console.log('wxpush发送通知消息成功🎉\n');
+            } else {
+              console.log(`${data.msg}\n`);
+            }
+          }
+        } catch (e) {
+          logErr(e, resp);
+        } finally {
+          resolve();
+        }
+      });
+    } else {
+      resolve();
+    }
+  });
 }
 
 function gotifyNotify(text, desp) {
@@ -601,7 +719,7 @@ function gobotNotify(text, desp) {
         url: `${GOBOT_URL}/send_msg?access_token=${GOBOT_TOKEN}&${GOBOT_QQ}`,
         body: {
           message: `${text}\n${desp}`,
-          "message_type": "private",
+          //"message_type": "private",
           "user_id": GOBOT_QQ,
         },
         headers: {
