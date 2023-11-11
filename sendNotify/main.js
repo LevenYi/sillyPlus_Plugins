@@ -297,10 +297,10 @@ Form({
 Form({
   title: "飞书机器人设置",
   valueType: "group",
-  tooltip: "官方文档：https://www.feishu.cn/hc/zh-CN/articles/360024984973",
   columns: [
     {
-      title: "飞书机器人的FSKEY",
+      title: "KEY",
+      tooltip: "官方文档：https://www.feishu.cn/hc/zh-CN/articles/360024984973",
       key: "notify.fsbot_key"
     }
   ]
