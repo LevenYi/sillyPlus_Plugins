@@ -505,21 +505,24 @@ async function sendNotify(
   //提供6种通知
   desp += author; //增加作者信息，防止被贩卖等
   await init();
-  if (!selector?.length)
+  if (!selector || !selector.length) {
     selector = SELECTOR
-  else
-    //   console.log("通知以下渠道：" + selector)
-    //console.log([WXPUSH_UID,WXPUSH_TOKEN,GOTIFY_URL, GOTIFY_TOKEN, GOTIFY_PRIORITY, GOBOT_URL, GOBOT_TOKEN, GOBOT_QQ, SCKEY, PUSHDEER_KEY, PUSHDEER_URL, CHAT_URL, CHAT_TOKEN, BARK_PUSH, BARK_ICON, BARK_SOUND, BARK_GROUP, TG_BOT_TOKEN, TG_USER_ID, TG_PROXY_HOST, TG_PROXY_PORT, TG_PROXY_AUTH, TG_API_HOST, DD_BOT_TOKEN, DD_BOT_SECRET, QYWX_KEY, QYWX_AM, IGOT_PUSH_KEY, PUSH_PLUS_TOKEN, PUSH_PLUS_USER, QQ_SKEY, QQ_MODE, AIBOTK_KEY, AIBOTK_TYPE, AIBOTK_NAME, FSKEY])
-    console.log([text, desp, params, author, selector].join("\n"))
+  }
+  // else
+  //   console.log("通知以下渠道：" + selector)
+  // console.log([WXPUSH_UID, WXPUSH_TOKEN, GOTIFY_URL, GOTIFY_TOKEN, GOTIFY_PRIORITY, GOBOT_URL, GOBOT_TOKEN, GOBOT_QQ, SCKEY, PUSHDEER_KEY, PUSHDEER_URL, CHAT_URL, CHAT_TOKEN, BARK_PUSH, BARK_ICON, BARK_SOUND, BARK_GROUP, TG_BOT_TOKEN, TG_USER_ID, TG_PROXY_HOST, TG_PROXY_PORT, TG_PROXY_AUTH, TG_API_HOST, DD_BOT_TOKEN, DD_BOT_SECRET, QYWX_KEY, QYWX_AM, IGOT_PUSH_KEY, PUSH_PLUS_TOKEN, PUSH_PLUS_USER, QQ_SKEY, QQ_MODE, AIBOTK_KEY, AIBOTK_TYPE, AIBOTK_NAME, FSKEY])
+  // console.log([text, desp, params, author, selector].join("\n"))
   text = text.match(/.*?(?=\s?-)/g) ? text.match(/.*?(?=\s?-)/g)[0] : text;
+
   let funcs = []
   if (selector.includes("wxpush"))
     funcs.push(wxpushNotify(text, desp))
   if (selector.includes("tgbot"))
     funcs.push(tgBotNotify(text, desp))
   if (selector.includes("ddbot"))
-    funcs.push(ddBotNotify(text, desp))
-  if ((selector.includes("qywxbot")))
+    if (selector.includes("ddbot"))
+      funcs.push(ddBotNotify(text, desp))
+  if (selector.includes("qywxbot"))
     funcs.push(qywxBotNotify(text, desp))
   if (selector.includes("qywxapp"))
     funcs.push(qywxamNotify(text, desp))
@@ -1211,7 +1214,7 @@ function qywxamNotify(text, desp) {
   });
 }
 
-function iGotNotify(text, desp, params = {}) {
+function iGotNotify(text, desp, params) {
   return new Promise((resolve) => {
     if (IGOT_PUSH_KEY) {
       // 校验传入的IGOT_PUSH_KEY是否有效
