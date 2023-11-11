@@ -20,7 +20,7 @@
  * 在jd文件夹放入本文件，文件夹“self_modules”内放入qinglong.js与something.js文件
  * 在傻+后台找到本插件(京东登陆)打开，点击右上角“表单”按钮进行配置
  * 本插件类似网页登陆，全程不经手ck，ck分发及维护由narkPro与rabbitPro负责
- * 若选择通知，需在sendNotify模块填写对应通知配置(待完成)
+ * 若选择通知，需在sendNotify模块填写对应通知配置
  * *** */
 
 const Form = () => { }
@@ -211,7 +211,6 @@ var pins = [] //用户已绑定的pin
 
 
 const $ = Env(s);
-const { sendNotify } = require("../sendNotify/main.js");
 const ql = require("../self_modules/qinglong.js");
 const { JD, CQ_Image, notifyMasters, getBind } = require("../self_modules/something.js");
 const timeout = 3 * 60 * 1000;	//输入等待时长
@@ -816,7 +815,10 @@ const handle = async function (s) {
 }
 
 function Notify(msg) {
-    sendNotify("傻+ 京东登陆", msg, {}, "", selector);
+    if (selector && selector.length) {
+        const { sendNotify } = require("../sendNotify/main.js");
+        sendNotify("傻+ 京东登陆", msg, {}, "", selector);
+    }
     NotifyMasters(msg);
 }
 function NotifyMasters(msg) {

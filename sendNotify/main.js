@@ -250,7 +250,7 @@ Form({
     },
     {
       title: "一对多推送的群组编码",
-      key: "notify.qywxapp_am",
+      key: "notify.pushplus_group",
       tooltip: "一对多推送下面->您的群组->群组编码，如果您是创建群组人。也需点击“查看二维码”扫描绑定，否则不能接受群组消息推送"
     }
   ]
@@ -476,7 +476,7 @@ async function init() {
 
     db.get("igot_key").then((data) => { if (data) IGOT_PUSH_KEY = data }),
     db.get("pushplus_token").then((data) => { if (data) PUSH_PLUS_TOKEN = data }),
-    db.get("qywxapp_am").then((data) => { if (data) PUSH_PLUS_USER = data }),
+    db.get("pushplus_group").then((data) => { if (data) PUSH_PLUS_USER = data }),
 
     db.get("coolpush_skey").then((data) => { if (data) QQ_SKEY = data }),
     db.get("coolpush_mode").then((data) => { if (data) QQ_MODE = data }),
@@ -520,8 +520,7 @@ async function sendNotify(
   if (selector.includes("tgbot"))
     funcs.push(tgBotNotify(text, desp))
   if (selector.includes("ddbot"))
-    if (selector.includes("ddbot"))
-      funcs.push(ddBotNotify(text, desp))
+    funcs.push(ddBotNotify(text, desp))
   if (selector.includes("qywxbot"))
     funcs.push(qywxBotNotify(text, desp))
   if (selector.includes("qywxapp"))
